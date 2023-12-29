@@ -9,6 +9,7 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export async function fetchRevenue() {
   // Add noStore() here prevent the response from being cached.
@@ -19,12 +20,12 @@ export async function fetchRevenue() {
     // Don't do this in production :)
 
     // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
-    // console.log('Data fetch completed after 3 seconds.');
-
+    console.log('Data fetch completed after 3 seconds.');
+    noStore();
     return data.rows;
   } catch (error) {
     console.error('Database Error:', error);
@@ -45,6 +46,7 @@ export async function fetchLatestInvoices() {
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
+    noStore();
     return latestInvoices;
   } catch (error) {
     console.error('Database Error:', error);
@@ -75,6 +77,7 @@ export async function fetchCardData() {
     const totalPaidInvoices = formatCurrency(data[2].rows[0].paid ?? '0');
     const totalPendingInvoices = formatCurrency(data[2].rows[0].pending ?? '0');
 
+    noStore();
     return {
       numberOfCustomers,
       numberOfInvoices,
@@ -116,6 +119,7 @@ export async function fetchFilteredInvoices(
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
+    noStore();
     return invoices.rows;
   } catch (error) {
     console.error('Database Error:', error);
@@ -137,6 +141,7 @@ export async function fetchInvoicesPages(query: string) {
   `;
 
     const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    noStore();
     return totalPages;
   } catch (error) {
     console.error('Database Error:', error);
@@ -162,6 +167,7 @@ export async function fetchInvoiceById(id: string) {
       amount: invoice.amount / 100,
     }));
 
+    noStore();
     return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
@@ -180,6 +186,7 @@ export async function fetchCustomers() {
     `;
 
     const customers = data.rows;
+    noStore();
     return customers;
   } catch (err) {
     console.error('Database Error:', err);
@@ -213,6 +220,7 @@ export async function fetchFilteredCustomers(query: string) {
       total_paid: formatCurrency(customer.total_paid),
     }));
 
+    noStore();
     return customers;
   } catch (err) {
     console.error('Database Error:', err);
@@ -223,6 +231,7 @@ export async function fetchFilteredCustomers(query: string) {
 export async function getUser(email: string) {
   try {
     const user = await sql`SELECT * FROM users WHERE email=${email}`;
+    noStore();
     return user.rows[0] as User;
   } catch (error) {
     console.error('Failed to fetch user:', error);
